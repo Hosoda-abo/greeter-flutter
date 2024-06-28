@@ -34,16 +34,20 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controller = TextEditingController();
   late Future<String> greeting = Future(() => "Who are you?");
 
-  void _updateName(String newValue) {
+  void _onNameChanged() {
     setState(() {
-      if (newValue.isEmpty) {
+      if (_controller.text.isEmpty) {
         greeting = Future(() => "Who are you?");
       }
     });
   }
 
-  void _submitName(String value) {
+  void _onSubmitButtonTapped() {
     setState(() {
+      if (_controller.text.isEmpty) {
+        greeting = Future(() => "Who are you?");
+        return;
+      }
       greeting = fetchGreeting();
     });
   }
@@ -76,15 +80,24 @@ class _MyHomePageState extends State<MyHomePage> {
             FutureBuilder(
               future: greeting,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  return Text(
-                    snapshot.data.toString(),
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  );
+                switch (snapshot.connectionState) {
+                  case ConnectionState.none:
+                    return const Text('Who are you?');
+                  case ConnectionState.active:
+                    return const Text('Who are you?');
+                  case ConnectionState.waiting:
+                    return const CircularProgressIndicator();
+                  case ConnectionState.done:
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else if (snapshot.hasData) {
+                      return Text(
+                        snapshot.data.toString(),
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      );
+                    } else {
+                      return const Text('Who are you?');
+                    }
                 }
               },
             ),
@@ -96,13 +109,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   border: OutlineInputBorder(),
                   labelText: 'Name',
                 ),
-                onChanged: (newValue) {
-                  _updateName(newValue);
-                },
-                onSubmitted: (value) {
-                  _submitName(value);
-                },
+                onChanged: (_) => _onNameChanged(),
+                onSubmitted: (_) => _onSubmitButtonTapped(),
+                textCapitalization: TextCapitalization.words,
               ),
+            ),
+            ElevatedButton(
+              onPressed: () => _onSubmitButtonTapped(),
+              child: const Text('Send'),
             ),
           ],
         ),
