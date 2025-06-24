@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -55,12 +56,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<String> fetchGreeting() async {
     final response = await http.get(
       Uri.parse(
-        'https://greeter-api-47e2p4x5ta-an.a.run.app/hello?name=${_controller.text}',
+        'https://greeter-api.vercel.app/hello?name=${_controller.text}',
       ),
     );
 
     if (response.statusCode == 200) {
-      return response.body;
+      final greeting = Greeting.fromJson(jsonDecode(response.body));
+      return greeting.message;
     } else {
       throw Exception('Failed to load greeting');
     }
@@ -121,6 +123,20 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+final class Greeting {
+  final String message;
+
+  const Greeting({
+    required this.message,
+  });
+
+  factory Greeting.fromJson(Map<String, dynamic> json) {
+    return Greeting(
+      message: json['message'] as String,
     );
   }
 }
