@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:greeter/fetchgreeting.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,7 +7,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
+//ヘッダー
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -33,41 +32,30 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controller = TextEditingController();
-  late Future<String> greeting = Future(() => "Who are you?");
+  late Future<String> greeting =
+      Future(() => "Who are you?"); //初期値として Who are you?を設定
 
+//入力された名前を全部消したら
   void _onNameChanged() {
     setState(() {
       if (_controller.text.isEmpty) {
-        greeting = Future(() => "Who are you?");
+        greeting = Future(() => "zenbukesitara");
       }
     });
   }
 
+//ボタンを押した時に空白だった時に返す
   void _onSubmitButtonTapped() {
     setState(() {
       if (_controller.text.isEmpty) {
-        greeting = Future(() => "Who are you?");
+        greeting = Future(() => "kuuhaku");
         return;
       }
-      greeting = fetchGreeting();
+      greeting = fetchGreeting(_controller);
     });
   }
 
-  Future<String> fetchGreeting() async {
-    final response = await http.get(
-      Uri.parse(
-        'https://greeter-api.vercel.app/hello?name=${_controller.text}',
-      ),
-    );
-
-    if (response.statusCode == 200) {
-      final greeting = Greeting.fromJson(jsonDecode(response.body));
-      return greeting.message;
-    } else {
-      throw Exception('Failed to load greeting');
-    }
-  }
-
+//UI的部分
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,12 +75,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     return const Text('Who are you?');
                   case ConnectionState.active:
                     return const Text('Who are you?');
-                  case ConnectionState.waiting:
+                  case ConnectionState.waiting: //APIからの応答を待っている時に表示する
                     return const CircularProgressIndicator();
-                  case ConnectionState.done:
+                  case ConnectionState.done: //APIからの応答が返ってきた
                     if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
                     } else if (snapshot.hasData) {
+                      //greetingの値がある時
                       return Text(
                         snapshot.data.toString(),
                         style: Theme.of(context).textTheme.headlineMedium,
@@ -123,20 +112,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-    );
-  }
-}
-
-final class Greeting {
-  final String message;
-
-  const Greeting({
-    required this.message,
-  });
-
-  factory Greeting.fromJson(Map<String, dynamic> json) {
-    return Greeting(
-      message: json['message'] as String,
     );
   }
 }
